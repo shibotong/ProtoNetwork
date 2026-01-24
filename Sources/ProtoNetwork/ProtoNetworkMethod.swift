@@ -5,7 +5,7 @@
 //  Created by Shibo Tong on 24/1/2026.
 //
 
-enum ProtoNetworkMethod: String {
+public enum ProtoNetworkMethod: String {
     case get = "GET"
     case post = "POST"
     case put = "PUT"
