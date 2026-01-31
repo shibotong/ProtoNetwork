@@ -4,12 +4,12 @@
 import Foundation
 
 public nonisolated protocol ProtoNetworkProtocol {
-    func request<T: Decodable>(method: ProtoNetworkMethod, url: String, query: [String: String], headers: [String: String?], body: [String: Any?], as type: T.Type) async throws -> T
+    func request<T: Decodable, V: Decodable & Error>(method: ProtoNetworkMethod, url: String, query: [String: String], headers: [String: String?], body: [String: Any?], as type: T.Type, error: V.Type) async throws -> T
 }
 
 public extension ProtoNetworkProtocol {
-    func request<T: Decodable>(_ method: ProtoNetworkMethod, url: String, query: [String: String] = [:], headers: [String: String?] = [:], body: [String: Any?], as type: T.Type) async throws -> T {
-        return try await request(method: method, url: url, query: query, headers: headers, body: body, as: type)
+    func request<T: Decodable, V: Decodable & Error>(_ method: ProtoNetworkMethod, url: String, query: [String: String] = [:], headers: [String: String?] = [:], body: [String: Any?], as type: T.Type, error: V.Type = ProtoError.self) async throws -> T {
+        return try await request(method: method, url: url, query: query, headers: headers, body: body, as: type, error: error)
     }
 }
 
@@ -21,14 +21,14 @@ public class ProtoNetwork: ProtoNetworkProtocol {
         self.timeoutInterval = timeoutInterval
     }
     
-    public func request<T: Decodable>(method: ProtoNetworkMethod, url: String, query: [String: String], headers: [String: String?], body: [String: Any?], as type: T.Type) async throws -> T {
+    public func request<T: Decodable, V: Decodable & Error>(method: ProtoNetworkMethod, url: String, query: [String: String], headers: [String: String?], body: [String: Any?], as type: T.Type, error: V.Type) async throws -> T {
         let request = try makeRequest(url: url, method: method, query: query, body: body, httpHeaders: headers)
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let urlResponse = response as? HTTPURLResponse else {
             throw URLError(.unknown)
         }
         guard urlResponse.statusCode >= 200 && urlResponse.statusCode <= 299 else {
-            let error = try JSONDecoder().decode(ProtoError.self, from: data)
+            let error = try JSONDecoder().decode(error, from: data)
             throw error
         }
         return try JSONDecoder().decode(type, from: data)

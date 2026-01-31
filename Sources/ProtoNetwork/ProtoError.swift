@@ -8,7 +8,7 @@
 public struct ProtoError: Error, Decodable, CustomStringConvertible {
     public let error: String
     
-    public let description: String {
+    public var description: String {
         return error
     }
 }
