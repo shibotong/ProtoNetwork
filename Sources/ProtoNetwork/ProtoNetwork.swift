@@ -28,7 +28,8 @@ public class ProtoNetwork: ProtoNetworkProtocol {
             throw URLError(.unknown)
         }
         guard urlResponse.statusCode >= 200 && urlResponse.statusCode <= 299 else {
-            throw URLError(.badServerResponse)
+            let error = try JSONDecoder().decode(ProtoError.self, from: data)
+            throw error
         }
         return try JSONDecoder().decode(type, from: data)
     }
